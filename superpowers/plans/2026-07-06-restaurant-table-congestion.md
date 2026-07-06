@@ -1,6 +1,6 @@
 ## Note
 
-이 계획은 서브프로젝트 2번(테이블/좌석 관리 + QR 주문 인식 + 혼잡도 표시, "웹기능")을 다룬다. 서브프로젝트 1번(`2026-07-06-restaurant-foundation-reservation.md` — 기반 시스템 + 예약 관리, "앱기능")이 먼저 완료되어 있어야 한다. 이 계획은 Task 1에서 Plan 1이 만든 `Server/prisma/schema.prisma`와 `RestaurantsService`/`RestaurantsController`에 필드를 추가하는 것으로 시작한다.
+이 계획은 서브프로젝트 2번(테이블/좌석 관리 + QR 주문 인식 + 혼잡도 표시, "웹기능")을 다룬다. 서브프로젝트 1번(`2026-07-06-restaurant-foundation-reservation.md` — 기반 시스템 + 예약 관리, "앱기능")이 먼저 완료되어 있어야 한다. 이 계획은 Task 1에서 Plan 1이 만든 `server/prisma/schema.prisma`와 `RestaurantsService`/`RestaurantsController`에 필드를 추가하는 것으로 시작한다.
 
 **사용자 확인 대기 중인 가정 (응답 없어 기본값으로 진행):**
 - "메인 매출계산화면에서의 결제내역"은 실제 메뉴/POS 없이, 테이블별 occupied/empty 상태 + "결제완료" 이벤트만 기록하는 경량 방식으로 구현한다.
@@ -15,7 +15,7 @@
 
 **Goal:** 음식점의 예약석 이외 좌석(테이블)을 좌석 인원수 타입(1/2/4/6인석)별로 등록하고, 고객이 테이블의 QR을 스캔하면 어느 테이블에서 주문이 들어왔는지 식별하며, 후불/선불 결제 완료 또는 직원호출버튼 연속 두 번 클릭으로 테이블을 비우고, 그 상태를 기반으로 실시간 혼잡도(쾌적/보통/혼잡)와 좌석 타입별 개수를 웹에 표시한다.
 
-**Architecture:** Plan 1이 구축한 `Server`(NestJS + Prisma + PostgreSQL) 위에 `Table`/`TableOrderEvent`/`PaymentRecord` 모델과 `TablesModule`을 추가한다. `Client`에 사장님용 테이블 관리·플로어 현황 페이지와 고객용 QR 랜딩 페이지를 추가하고, Plan 1의 고객 검색/상세 페이지에 혼잡도·좌석수 배지를 붙인다.
+**Architecture:** Plan 1이 구축한 `server`(NestJS + Prisma + PostgreSQL) 위에 `Table`/`TableOrderEvent`/`PaymentRecord` 모델과 `TablesModule`을 추가한다. `client`에 사장님용 테이블 관리·플로어 현황 페이지와 고객용 QR 랜딩 페이지를 추가하고, Plan 1의 고객 검색/상세 페이지에 혼잡도·좌석수 배지를 붙인다.
 
 **Tech Stack:** Plan 1과 동일(TypeScript strict, NestJS 10.x, Prisma 5.x + PostgreSQL, Jest + Supertest, React 18 + Vite, Vitest + Testing Library) + `qrcode`(서버 사이드 QR 이미지 생성).
 
@@ -33,12 +33,12 @@
 ## Task 1: Prisma 스키마 확장 (Table/TableOrderEvent/PaymentRecord) + 결제방식 설정
 
 **Files:**
-- Modify: `Server/prisma/schema.prisma`
-- Modify: `Server/.env`
-- Create: `Server/src/restaurants/dto/set-payment-mode.dto.ts`
-- Modify: `Server/src/restaurants/restaurants.service.ts`
-- Modify: `Server/src/restaurants/restaurants.service.spec.ts`
-- Modify: `Server/src/restaurants/restaurants.controller.ts`
+- Modify: `server/prisma/schema.prisma`
+- Modify: `server/.env`
+- Create: `server/src/restaurants/dto/set-payment-mode.dto.ts`
+- Modify: `server/src/restaurants/restaurants.service.ts`
+- Modify: `server/src/restaurants/restaurants.service.spec.ts`
+- Modify: `server/src/restaurants/restaurants.controller.ts`
 
 **Interfaces:**
 - Consumes: Plan 1의 `Restaurant` 모델, `RestaurantsService`, `RestaurantMemberGuard`/`Roles`
@@ -46,7 +46,7 @@
 
 - [ ] **Step 1: 스키마에 enum과 모델 추가**
 
-`Server/prisma/schema.prisma`의 기존 enum 블록 아래에 추가:
+`server/prisma/schema.prisma`의 기존 enum 블록 아래에 추가:
 ```prisma
 enum PaymentMode {
   POSTPAID
@@ -120,7 +120,7 @@ model PaymentRecord {
 
 - [ ] **Step 2: 환경 변수 추가**
 
-`Server/.env`에 추가:
+`server/.env`에 추가:
 ```
 FRONTEND_BASE_URL="http://localhost:5173"
 ```
@@ -128,11 +128,11 @@ FRONTEND_BASE_URL="http://localhost:5173"
 - [ ] **Step 3: 마이그레이션 생성**
 
 Run: `pnpm --filter server exec prisma migrate dev --name add_tables_and_payment_mode`
-Expected: `Server/prisma/migrations/<timestamp>_add_tables_and_payment_mode/migration.sql` 생성, "Your database is now in sync with your schema." 출력
+Expected: `server/prisma/migrations/<timestamp>_add_tables_and_payment_mode/migration.sql` 생성, "Your database is now in sync with your schema." 출력
 
 - [ ] **Step 4: RestaurantsService에 결제방식 설정 실패 테스트 추가**
 
-`Server/src/restaurants/restaurants.service.spec.ts` 하단에 다음 `describe` 블록 추가:
+`server/src/restaurants/restaurants.service.spec.ts` 하단에 다음 `describe` 블록 추가:
 ```typescript
 describe('RestaurantsService - payment mode', () => {
   let service: RestaurantsService;
@@ -180,7 +180,7 @@ Expected: FAIL (`service.setPaymentMode is not a function`)
 
 - [ ] **Step 6: DTO 및 서비스 메서드 추가**
 
-`Server/src/restaurants/dto/set-payment-mode.dto.ts`:
+`server/src/restaurants/dto/set-payment-mode.dto.ts`:
 ```typescript
 import { IsIn } from 'class-validator';
 
@@ -192,7 +192,7 @@ export class SetPaymentModeDto {
 }
 ```
 
-`Server/src/restaurants/restaurants.service.ts`의 `search` 메서드 뒤에 추가:
+`server/src/restaurants/restaurants.service.ts`의 `search` 메서드 뒤에 추가:
 ```typescript
   async setPaymentMode(restaurantId: string, paymentMode: 'POSTPAID' | 'PREPAID') {
     return this.prisma.restaurant.update({ where: { id: restaurantId }, data: { paymentMode } });
@@ -206,7 +206,7 @@ Expected: PASS (9 passed)
 
 - [ ] **Step 8: 컨트롤러에 엔드포인트 추가**
 
-`Server/src/restaurants/restaurants.controller.ts`에 import 추가:
+`server/src/restaurants/restaurants.controller.ts`에 import 추가:
 ```typescript
 import { SetPaymentModeDto } from './dto/set-payment-mode.dto';
 ```
@@ -228,7 +228,7 @@ Expected: PASS (모든 스펙 통과)
 - [ ] **Step 10: Commit**
 
 ```bash
-git add Server/prisma Server/.env Server/src/restaurants
+git add server/prisma server/.env server/src/restaurants
 git commit -m "feat: add Table/TableOrderEvent/PaymentRecord models and restaurant payment mode setting"
 ```
 
@@ -237,8 +237,8 @@ git commit -m "feat: add Table/TableOrderEvent/PaymentRecord models and restaura
 ## Task 2: 좌석 용량 계산 유틸 (혼잡도/좌석수 요약)
 
 **Files:**
-- Create: `Server/src/tables/seat-capacity.util.ts`
-- Create: `Server/src/tables/seat-capacity.util.spec.ts`
+- Create: `server/src/tables/seat-capacity.util.ts`
+- Create: `server/src/tables/seat-capacity.util.spec.ts`
 
 **Interfaces:**
 - Consumes: 없음 (순수 함수)
@@ -246,7 +246,7 @@ git commit -m "feat: add Table/TableOrderEvent/PaymentRecord models and restaura
 
 - [ ] **Step 1: 실패 테스트 작성**
 
-`Server/src/tables/seat-capacity.util.spec.ts`:
+`server/src/tables/seat-capacity.util.spec.ts`:
 ```typescript
 import { computeCongestion, computeSeatCounts } from './seat-capacity.util';
 
@@ -304,7 +304,7 @@ Expected: FAIL ("Cannot find module './seat-capacity.util'")
 
 - [ ] **Step 3: 구현**
 
-`Server/src/tables/seat-capacity.util.ts`:
+`server/src/tables/seat-capacity.util.ts`:
 ```typescript
 export type SeatTypeValue = 'SEAT_1' | 'SEAT_2' | 'SEAT_4' | 'SEAT_6';
 export type TableStatusValue = 'EMPTY' | 'OCCUPIED';
@@ -357,7 +357,7 @@ Expected: PASS (5 passed)
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Server/src/tables/seat-capacity.util.ts Server/src/tables/seat-capacity.util.spec.ts
+git add server/src/tables/seat-capacity.util.ts server/src/tables/seat-capacity.util.spec.ts
 git commit -m "feat: add seat count and congestion calculation utility"
 ```
 
@@ -366,10 +366,10 @@ git commit -m "feat: add seat count and congestion calculation utility"
 ## Task 3: TablesService — 테이블 등록/목록/QR 코드 생성/요약
 
 **Files:**
-- Modify: `Server/package.json`
-- Create: `Server/src/tables/dto/create-table.dto.ts`
-- Create: `Server/src/tables/tables.service.ts`
-- Create: `Server/src/tables/tables.service.spec.ts`
+- Modify: `server/package.json`
+- Create: `server/src/tables/dto/create-table.dto.ts`
+- Create: `server/src/tables/tables.service.ts`
+- Create: `server/src/tables/tables.service.spec.ts`
 
 **Interfaces:**
 - Consumes: `PrismaService`(Plan 1 Task 2), `computeSeatCounts`/`computeCongestion`(Task 2)
@@ -377,7 +377,7 @@ git commit -m "feat: add seat count and congestion calculation utility"
 
 - [ ] **Step 1: `qrcode` 패키지 의존성 추가**
 
-`Server/package.json`의 `dependencies`에 추가:
+`server/package.json`의 `dependencies`에 추가:
 ```json
     "qrcode": "^1.5.3",
 ```
@@ -387,11 +387,11 @@ git commit -m "feat: add seat count and congestion calculation utility"
 ```
 
 Run: `pnpm install`
-Expected: `qrcode`, `@types/qrcode`가 `Server/node_modules`에 설치됨
+Expected: `qrcode`, `@types/qrcode`가 `server/node_modules`에 설치됨
 
 - [ ] **Step 2: DTO 작성**
 
-`Server/src/tables/dto/create-table.dto.ts`:
+`server/src/tables/dto/create-table.dto.ts`:
 ```typescript
 import { IsIn, IsInt, Min } from 'class-validator';
 
@@ -409,7 +409,7 @@ export class CreateTableDto {
 
 - [ ] **Step 3: 실패 테스트 작성**
 
-`Server/src/tables/tables.service.spec.ts`:
+`server/src/tables/tables.service.spec.ts`:
 ```typescript
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -520,7 +520,7 @@ Expected: FAIL ("Cannot find module './tables.service'")
 
 - [ ] **Step 5: TablesService 구현**
 
-`Server/src/tables/tables.service.ts`:
+`server/src/tables/tables.service.ts`:
 ```typescript
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -596,7 +596,7 @@ Expected: PASS (6 passed)
 - [ ] **Step 7: Commit**
 
 ```bash
-git add Server/package.json Server/src/tables
+git add server/package.json server/src/tables
 git commit -m "feat: add TablesService with QR code generation and congestion summary"
 ```
 
@@ -605,9 +605,9 @@ git commit -m "feat: add TablesService with QR code generation and congestion su
 ## Task 4: TablesController + TablesModule — 등록/목록/요약/QR 조회 엔드포인트
 
 **Files:**
-- Create: `Server/src/tables/tables.controller.ts`
-- Create: `Server/src/tables/tables.module.ts`
-- Modify: `Server/src/app.module.ts`
+- Create: `server/src/tables/tables.controller.ts`
+- Create: `server/src/tables/tables.module.ts`
+- Modify: `server/src/app.module.ts`
 
 **Interfaces:**
 - Consumes: `TablesService`(Task 3), `JwtAuthGuard`/`RestaurantMemberGuard`/`Roles`(Plan 1)
@@ -615,7 +615,7 @@ git commit -m "feat: add TablesService with QR code generation and congestion su
 
 - [ ] **Step 1: 컨트롤러 작성**
 
-`Server/src/tables/tables.controller.ts`:
+`server/src/tables/tables.controller.ts`:
 ```typescript
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -655,7 +655,7 @@ export class TablesController {
 
 - [ ] **Step 2: 모듈 작성**
 
-`Server/src/tables/tables.module.ts`:
+`server/src/tables/tables.module.ts`:
 ```typescript
 import { Module } from '@nestjs/common';
 import { RestaurantsModule } from '../restaurants/restaurants.module';
@@ -673,7 +673,7 @@ export class TablesModule {}
 
 - [ ] **Step 3: AppModule에 등록**
 
-`Server/src/app.module.ts`:
+`server/src/app.module.ts`:
 ```typescript
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -704,7 +704,7 @@ Expected: PASS (모든 스펙 통과)
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Server/src/tables/tables.controller.ts Server/src/tables/tables.module.ts Server/src/app.module.ts
+git add server/src/tables/tables.controller.ts server/src/tables/tables.module.ts server/src/app.module.ts
 git commit -m "feat: expose table creation, listing, summary, and QR lookup endpoints"
 ```
 
@@ -713,10 +713,10 @@ git commit -m "feat: expose table creation, listing, summary, and QR lookup endp
 ## Task 5: QR 주문 접수 — 테이블에서 주문이 들어왔음을 식별
 
 **Files:**
-- Create: `Server/src/tables/dto/place-order.dto.ts`
-- Modify: `Server/src/tables/tables.service.ts`
-- Modify: `Server/src/tables/tables.service.spec.ts`
-- Modify: `Server/src/tables/tables.controller.ts`
+- Create: `server/src/tables/dto/place-order.dto.ts`
+- Modify: `server/src/tables/tables.service.ts`
+- Modify: `server/src/tables/tables.service.spec.ts`
+- Modify: `server/src/tables/tables.controller.ts`
 
 **Interfaces:**
 - Consumes: `TablesService`(Task 3)
@@ -724,7 +724,7 @@ git commit -m "feat: expose table creation, listing, summary, and QR lookup endp
 
 - [ ] **Step 1: DTO 작성**
 
-`Server/src/tables/dto/place-order.dto.ts`:
+`server/src/tables/dto/place-order.dto.ts`:
 ```typescript
 import { IsOptional, IsString, MaxLength } from 'class-validator';
 
@@ -797,7 +797,7 @@ Expected: FAIL (`service.placeOrder is not a function`)
 
 - [ ] **Step 4: TablesService에 메서드 추가**
 
-`Server/src/tables/tables.service.ts`의 `getSummary` 메서드 뒤에 추가:
+`server/src/tables/tables.service.ts`의 `getSummary` 메서드 뒤에 추가:
 ```typescript
   async placeOrder(qrToken: string, note?: string) {
     const { table } = await this.findByQrToken(qrToken);
@@ -817,7 +817,7 @@ Expected: PASS (7 passed)
 
 - [ ] **Step 6: 컨트롤러에 엔드포인트 추가**
 
-`Server/src/tables/tables.controller.ts`에 import 추가:
+`server/src/tables/tables.controller.ts`에 import 추가:
 ```typescript
 import { PlaceOrderDto } from './dto/place-order.dto';
 ```
@@ -837,7 +837,7 @@ Expected: PASS (모든 스펙 통과)
 - [ ] **Step 8: Commit**
 
 ```bash
-git add Server/src/tables
+git add server/src/tables
 git commit -m "feat: identify incoming orders by table via QR scan"
 ```
 
@@ -846,10 +846,10 @@ git commit -m "feat: identify incoming orders by table via QR scan"
 ## Task 6: 테이블 비우기 — 후불 결제완료 / 선불 청소완료
 
 **Files:**
-- Create: `Server/src/tables/dto/complete-payment.dto.ts`
-- Modify: `Server/src/tables/tables.service.ts`
-- Modify: `Server/src/tables/tables.service.spec.ts`
-- Modify: `Server/src/tables/tables.controller.ts`
+- Create: `server/src/tables/dto/complete-payment.dto.ts`
+- Modify: `server/src/tables/tables.service.ts`
+- Modify: `server/src/tables/tables.service.spec.ts`
+- Modify: `server/src/tables/tables.controller.ts`
 
 **Interfaces:**
 - Consumes: `TablesService`(Task 3, 5)
@@ -857,7 +857,7 @@ git commit -m "feat: identify incoming orders by table via QR scan"
 
 - [ ] **Step 1: DTO 작성**
 
-`Server/src/tables/dto/complete-payment.dto.ts`:
+`server/src/tables/dto/complete-payment.dto.ts`:
 ```typescript
 import { IsInt, IsOptional, Min } from 'class-validator';
 
@@ -974,7 +974,7 @@ Expected: FAIL (`service.completePayment is not a function`)
 
 - [ ] **Step 4: TablesService에 메서드 추가**
 
-`Server/src/tables/tables.service.ts`의 `placeOrder` 메서드 뒤에 추가:
+`server/src/tables/tables.service.ts`의 `placeOrder` 메서드 뒤에 추가:
 ```typescript
   private async assertTableBelongsToRestaurant(restaurantId: string, tableId: string) {
     const table = await this.prisma.table.findUnique({ where: { id: tableId } });
@@ -1005,7 +1005,7 @@ Expected: PASS (11 passed)
 
 - [ ] **Step 6: 컨트롤러에 엔드포인트 추가**
 
-`Server/src/tables/tables.controller.ts`에 import 추가:
+`server/src/tables/tables.controller.ts`에 import 추가:
 ```typescript
 import { CompletePaymentDto } from './dto/complete-payment.dto';
 ```
@@ -1036,7 +1036,7 @@ Expected: PASS (모든 스펙 통과)
 - [ ] **Step 8: Commit**
 
 ```bash
-git add Server/src/tables
+git add server/src/tables
 git commit -m "feat: add postpaid payment-completion and prepaid table-clear endpoints"
 ```
 
@@ -1045,9 +1045,9 @@ git commit -m "feat: add postpaid payment-completion and prepaid table-clear end
 ## Task 7: 직원호출버튼 — 연속 두 번 클릭 시 테이블 비우기
 
 **Files:**
-- Modify: `Server/src/tables/tables.service.ts`
-- Modify: `Server/src/tables/tables.service.spec.ts`
-- Modify: `Server/src/tables/tables.controller.ts`
+- Modify: `server/src/tables/tables.service.ts`
+- Modify: `server/src/tables/tables.service.spec.ts`
+- Modify: `server/src/tables/tables.controller.ts`
 
 **Interfaces:**
 - Consumes: `TablesService`(Task 3, 5, 6)
@@ -1140,7 +1140,7 @@ Expected: FAIL (`service.pressCallButton is not a function`)
 
 - [ ] **Step 3: TablesService에 메서드 추가**
 
-`Server/src/tables/tables.service.ts` 상단에 상수 추가:
+`server/src/tables/tables.service.ts` 상단에 상수 추가:
 ```typescript
 const CALL_DOUBLE_PRESS_WINDOW_MS = 10_000;
 ```
@@ -1175,7 +1175,7 @@ Expected: PASS (14 passed)
 
 - [ ] **Step 5: 컨트롤러에 엔드포인트 추가**
 
-`Server/src/tables/tables.controller.ts`의 `placeOrder` 메서드 뒤에 추가:
+`server/src/tables/tables.controller.ts`의 `placeOrder` 메서드 뒤에 추가:
 ```typescript
   @Post('tables/qr/:qrToken/call')
   pressCallButton(@Param('qrToken') qrToken: string) {
@@ -1191,7 +1191,7 @@ Expected: PASS (모든 스펙 통과)
 - [ ] **Step 7: Commit**
 
 ```bash
-git add Server/src/tables
+git add server/src/tables
 git commit -m "feat: add call-button endpoint with double-press table-clear logic"
 ```
 
@@ -1200,10 +1200,10 @@ git commit -m "feat: add call-button endpoint with double-press table-clear logi
 ## Task 8: Frontend — 대시보드: 테이블/좌석 관리 페이지 (QR 코드 표시)
 
 **Files:**
-- Create: `Client/src/dashboard/TablesPage.tsx`
-- Create: `Client/src/dashboard/TablesPage.test.tsx`
-- Modify: `Client/src/App.tsx`
-- Modify: `Client/src/dashboard/DashboardLayout.tsx`
+- Create: `client/src/dashboard/TablesPage.tsx`
+- Create: `client/src/dashboard/TablesPage.test.tsx`
+- Modify: `client/src/App.tsx`
+- Modify: `client/src/dashboard/DashboardLayout.tsx`
 
 **Interfaces:**
 - Consumes: `apiClient`(Plan 1 Task 8), `DashboardLayout`(Plan 1 Task 9)
@@ -1211,7 +1211,7 @@ git commit -m "feat: add call-button endpoint with double-press table-clear logi
 
 - [ ] **Step 1: 실패 테스트 작성**
 
-`Client/src/dashboard/TablesPage.test.tsx`:
+`client/src/dashboard/TablesPage.test.tsx`:
 ```tsx
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -1292,7 +1292,7 @@ Expected: FAIL ("Cannot find module './TablesPage'")
 
 - [ ] **Step 3: TablesPage 구현**
 
-`Client/src/dashboard/TablesPage.tsx`:
+`client/src/dashboard/TablesPage.tsx`:
 ```tsx
 import { FormEvent, useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
@@ -1393,7 +1393,7 @@ Expected: PASS (2 passed)
 
 - [ ] **Step 5: 라우팅 추가**
 
-`Client/src/App.tsx`에 import 추가:
+`client/src/App.tsx`에 import 추가:
 ```tsx
 import { TablesPage } from './dashboard/TablesPage';
 ```
@@ -1402,7 +1402,7 @@ import { TablesPage } from './dashboard/TablesPage';
             <Route path="tables" element={<TablesPage />} />
 ```
 
-`Client/src/dashboard/DashboardLayout.tsx`의 `nav`에 링크 추가:
+`client/src/dashboard/DashboardLayout.tsx`의 `nav`에 링크 추가:
 ```tsx
         <NavLink to="/dashboard/tables">테이블 관리</NavLink>
 ```
@@ -1410,7 +1410,7 @@ import { TablesPage } from './dashboard/TablesPage';
 - [ ] **Step 6: Commit**
 
 ```bash
-git add Client/src/dashboard/TablesPage.tsx Client/src/dashboard/TablesPage.test.tsx Client/src/App.tsx Client/src/dashboard/DashboardLayout.tsx
+git add client/src/dashboard/TablesPage.tsx client/src/dashboard/TablesPage.test.tsx client/src/App.tsx client/src/dashboard/DashboardLayout.tsx
 git commit -m "feat: add dashboard table/seat management page with QR codes"
 ```
 
@@ -1419,9 +1419,9 @@ git commit -m "feat: add dashboard table/seat management page with QR codes"
 ## Task 9: Frontend — QR 랜딩 페이지 (고객: 주문 접수 + 직원호출)
 
 **Files:**
-- Create: `Client/src/customer/TableQrPage.tsx`
-- Create: `Client/src/customer/TableQrPage.test.tsx`
-- Modify: `Client/src/App.tsx`
+- Create: `client/src/customer/TableQrPage.tsx`
+- Create: `client/src/customer/TableQrPage.test.tsx`
+- Modify: `client/src/App.tsx`
 
 **Interfaces:**
 - Consumes: `apiClient`(Plan 1 Task 8)
@@ -1429,7 +1429,7 @@ git commit -m "feat: add dashboard table/seat management page with QR codes"
 
 - [ ] **Step 1: 실패 테스트 작성**
 
-`Client/src/customer/TableQrPage.test.tsx`:
+`client/src/customer/TableQrPage.test.tsx`:
 ```tsx
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -1516,7 +1516,7 @@ Expected: FAIL ("Cannot find module './TableQrPage'")
 
 - [ ] **Step 3: TableQrPage 구현**
 
-`Client/src/customer/TableQrPage.tsx`:
+`client/src/customer/TableQrPage.tsx`:
 ```tsx
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -1572,7 +1572,7 @@ Expected: PASS (3 passed)
 
 - [ ] **Step 5: 라우팅 추가**
 
-`Client/src/App.tsx`에 import 추가:
+`client/src/App.tsx`에 import 추가:
 ```tsx
 import { TableQrPage } from './customer/TableQrPage';
 ```
@@ -1584,7 +1584,7 @@ Route 추가:
 - [ ] **Step 6: Commit**
 
 ```bash
-git add Client/src/customer/TableQrPage.tsx Client/src/customer/TableQrPage.test.tsx Client/src/App.tsx
+git add client/src/customer/TableQrPage.tsx client/src/customer/TableQrPage.test.tsx client/src/App.tsx
 git commit -m "feat: add customer QR landing page for order placement and staff call"
 ```
 
@@ -1593,10 +1593,10 @@ git commit -m "feat: add customer QR landing page for order placement and staff 
 ## Task 10: Frontend — 대시보드: 플로어 현황 페이지 (혼잡도 + 좌석수 요약 + 테이블 그리드)
 
 **Files:**
-- Create: `Client/src/dashboard/FloorStatusPage.tsx`
-- Create: `Client/src/dashboard/FloorStatusPage.test.tsx`
-- Modify: `Client/src/App.tsx`
-- Modify: `Client/src/dashboard/DashboardLayout.tsx`
+- Create: `client/src/dashboard/FloorStatusPage.tsx`
+- Create: `client/src/dashboard/FloorStatusPage.test.tsx`
+- Modify: `client/src/App.tsx`
+- Modify: `client/src/dashboard/DashboardLayout.tsx`
 
 **Interfaces:**
 - Consumes: `apiClient`(Plan 1 Task 8), `DashboardLayout`(Plan 1 Task 9)
@@ -1604,7 +1604,7 @@ git commit -m "feat: add customer QR landing page for order placement and staff 
 
 - [ ] **Step 1: 실패 테스트 작성**
 
-`Client/src/dashboard/FloorStatusPage.test.tsx`:
+`client/src/dashboard/FloorStatusPage.test.tsx`:
 ```tsx
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -1681,7 +1681,7 @@ Expected: FAIL ("Cannot find module './FloorStatusPage'")
 
 - [ ] **Step 3: FloorStatusPage 구현**
 
-`Client/src/dashboard/FloorStatusPage.tsx`:
+`client/src/dashboard/FloorStatusPage.tsx`:
 ```tsx
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
@@ -1785,7 +1785,7 @@ Expected: PASS (2 passed)
 
 - [ ] **Step 5: 라우팅 추가**
 
-`Client/src/App.tsx`에 import 추가:
+`client/src/App.tsx`에 import 추가:
 ```tsx
 import { FloorStatusPage } from './dashboard/FloorStatusPage';
 ```
@@ -1794,7 +1794,7 @@ import { FloorStatusPage } from './dashboard/FloorStatusPage';
             <Route path="floor" element={<FloorStatusPage />} />
 ```
 
-`Client/src/dashboard/DashboardLayout.tsx`의 `nav`에 링크 추가:
+`client/src/dashboard/DashboardLayout.tsx`의 `nav`에 링크 추가:
 ```tsx
         <NavLink to="/dashboard/floor">플로어 현황</NavLink>
 ```
@@ -1802,7 +1802,7 @@ import { FloorStatusPage } from './dashboard/FloorStatusPage';
 - [ ] **Step 6: Commit**
 
 ```bash
-git add Client/src/dashboard/FloorStatusPage.tsx Client/src/dashboard/FloorStatusPage.test.tsx Client/src/App.tsx Client/src/dashboard/DashboardLayout.tsx
+git add client/src/dashboard/FloorStatusPage.tsx client/src/dashboard/FloorStatusPage.test.tsx client/src/App.tsx client/src/dashboard/DashboardLayout.tsx
 git commit -m "feat: add dashboard floor status page with congestion and seat summary"
 ```
 
@@ -1811,10 +1811,10 @@ git commit -m "feat: add dashboard floor status page with congestion and seat su
 ## Task 11: Frontend — 고객 검색/상세 페이지에 혼잡도·좌석수 배지 추가
 
 **Files:**
-- Modify: `Client/src/customer/SearchPage.tsx`
-- Modify: `Client/src/customer/SearchPage.test.tsx`
-- Modify: `Client/src/customer/RestaurantBookingPage.tsx`
-- Modify: `Client/src/customer/RestaurantBookingPage.test.tsx`
+- Modify: `client/src/customer/SearchPage.tsx`
+- Modify: `client/src/customer/SearchPage.test.tsx`
+- Modify: `client/src/customer/RestaurantBookingPage.tsx`
+- Modify: `client/src/customer/RestaurantBookingPage.test.tsx`
 
 **Interfaces:**
 - Consumes: `apiClient`(Plan 1 Task 8), `GET /restaurants/:id/tables/summary`(Task 4)
@@ -1822,7 +1822,7 @@ git commit -m "feat: add dashboard floor status page with congestion and seat su
 
 - [ ] **Step 1: SearchPage 테스트에 혼잡도 표시 케이스 추가**
 
-`Client/src/customer/SearchPage.test.tsx` 하단에 추가:
+`client/src/customer/SearchPage.test.tsx` 하단에 추가:
 ```tsx
 it('shows the congestion badge for each search result', async () => {
   vi.mocked(apiClient.get).mockImplementation((path: string) => {
@@ -1864,7 +1864,7 @@ Expected: FAIL (혼잡도 텍스트를 찾을 수 없음)
 
 - [ ] **Step 3: SearchPage에 혼잡도 조회 및 표시 추가**
 
-`Client/src/customer/SearchPage.tsx` 전체를 다음으로 교체:
+`client/src/customer/SearchPage.tsx` 전체를 다음으로 교체:
 ```tsx
 import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -1933,7 +1933,7 @@ Expected: PASS (2 passed)
 
 - [ ] **Step 5: RestaurantBookingPage 테스트에 좌석수 요약 표시 케이스 추가**
 
-`Client/src/customer/RestaurantBookingPage.test.tsx` 하단에 추가:
+`client/src/customer/RestaurantBookingPage.test.tsx` 하단에 추가:
 ```tsx
 it('shows the seat count summary and congestion level', async () => {
   vi.mocked(apiClient.get).mockImplementation((path: string) => {
@@ -1970,7 +1970,7 @@ Expected: FAIL (좌석수/혼잡도 텍스트를 찾을 수 없음)
 
 - [ ] **Step 7: RestaurantBookingPage에 좌석수/혼잡도 표시 추가**
 
-`Client/src/customer/RestaurantBookingPage.tsx` 상단에 타입 및 상수 추가:
+`client/src/customer/RestaurantBookingPage.tsx` 상단에 타입 및 상수 추가:
 ```tsx
 type SeatType = 'SEAT_1' | 'SEAT_2' | 'SEAT_4' | 'SEAT_6';
 
@@ -2029,7 +2029,7 @@ Expected: PASS (모든 스펙 통과)
 - [ ] **Step 10: Commit**
 
 ```bash
-git add Client/src/customer
+git add client/src/customer
 git commit -m "feat: show congestion level and seat count summary on customer search and booking pages"
 ```
 

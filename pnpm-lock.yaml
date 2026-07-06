@@ -8,7 +8,7 @@ importers:
 
   .: {}
 
-  Client:
+  client:
     dependencies:
       react:
         specifier: ^18.2.0
@@ -48,7 +48,7 @@ importers:
         specifier: ^1.3.0
         version: 1.6.1(@types/node@20.19.43)(jsdom@24.1.3)(terser@5.48.0)
 
-  Server:
+  server:
     dependencies:
       '@nestjs/common':
         specifier: ^10.0.0

@@ -443,7 +443,7 @@ JWT_SECRET="dev-secret-change-in-production"
 PORT=3000
 ```
 
-- [ ] **Step 3: 마이그레이션 생성 및 Prisma Client 생성**
+- [ ] **Step 3: 마이그레이션 생성 및 Prisma client 생성**
 
 Run: `pnpm --filter api exec prisma migrate dev --name init`
 Expected: `apps/api/prisma/migrations/<timestamp>_init/migration.sql` 생성, `apps/api/prisma/dev.db` 파일 생성, "Your database is now in sync with your schema." 출력

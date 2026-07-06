@@ -7,8 +7,8 @@
 pnpm workspace 모노레포로 구성되어 있다.
 
 ```
-Server/   NestJS + Prisma + PostgreSQL REST API
-Client/   React + Vite + TypeScript SPA
+server/   NestJS + Prisma + PostgreSQL REST API
+client/   React + Vite + TypeScript SPA
 ```
 
 구현 계획은 `superpowers/plans/`에 있다:
@@ -59,4 +59,4 @@ pnpm test:web
 
 ## 현재 진행 상황
 
-현재는 `Server`(NestJS)와 `Client`(React + Vite) 앱의 초기 스캐폴딩만 완료된 상태다. Prisma/PostgreSQL 연동, 인증, 예약, 테이블/혼잡도 기능은 위 계획 문서에 따라 순차적으로 구현 예정이다.
+현재는 `server`(NestJS)와 `client`(React + Vite) 앱의 초기 스캐폴딩만 완료된 상태다. Prisma/PostgreSQL 연동, 인증, 예약, 테이블/혼잡도 기능은 위 계획 문서에 따라 순차적으로 구현 예정이다.

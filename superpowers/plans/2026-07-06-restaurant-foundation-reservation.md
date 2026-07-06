@@ -14,7 +14,7 @@
 
 **Goal:** 여러 음식점(다중 테넌트)을 대상으로, 사장님/직원이 인증 후 음식점 정보(운영시간/위치/전화번호/주차여부)를 등록·관리하고, 고객이 비회원으로 시간대별·인원수 기준 예약을 할 수 있는 웹앱의 기반 시스템과 예약 기능을 구축한다.
 
-**Architecture:** pnpm workspace 모노레포. `Server`는 NestJS + Prisma + PostgreSQL로 REST API를 제공하고, `Client`은 React + Vite + TypeScript SPA로 사장님/직원용 대시보드와 고객용 검색·예약 페이지를 제공한다. 로컬 개발은 Docker Compose로 띄운 PostgreSQL을 사용한다.
+**Architecture:** pnpm workspace 모노레포. `server`는 NestJS + Prisma + PostgreSQL로 REST API를 제공하고, `client`은 React + Vite + TypeScript SPA로 사장님/직원용 대시보드와 고객용 검색·예약 페이지를 제공한다. 로컬 개발은 Docker Compose로 띄운 PostgreSQL을 사용한다.
 
 **Tech Stack:** TypeScript(strict) 전역, NestJS 10.x, Prisma 5.x + PostgreSQL 16, Passport-JWT, bcryptjs, class-validator, Jest + Supertest(백엔드 테스트), React 18 + Vite, react-router-dom, Vitest + Testing Library(프론트엔드 테스트), Docker Compose(로컬 DB), Nginx(배포 참고 산출물).
 
@@ -39,23 +39,23 @@
 - Create: `pnpm-workspace.yaml`
 - Create: `.gitignore`
 - Create: `docker-compose.yml`
-- Create: `Server/package.json`
-- Create: `Server/tsconfig.json`
-- Create: `Server/tsconfig.build.json`
-- Create: `Server/nest-cli.json`
-- Create: `Server/src/main.ts`
-- Create: `Server/src/app.module.ts`
-- Create: `Client/package.json`
-- Create: `Client/tsconfig.json`
-- Create: `Client/tsconfig.node.json`
-- Create: `Client/vite.config.ts`
-- Create: `Client/index.html`
-- Create: `Client/src/main.tsx`
-- Create: `Client/src/App.tsx`
+- Create: `server/package.json`
+- Create: `server/tsconfig.json`
+- Create: `server/tsconfig.build.json`
+- Create: `server/nest-cli.json`
+- Create: `server/src/main.ts`
+- Create: `server/src/app.module.ts`
+- Create: `client/package.json`
+- Create: `client/tsconfig.json`
+- Create: `client/tsconfig.node.json`
+- Create: `client/vite.config.ts`
+- Create: `client/index.html`
+- Create: `client/src/main.tsx`
+- Create: `client/src/App.tsx`
 
 **Interfaces:**
 - Consumes: 없음
-- Produces: `Server` — NestJS 앱 진입점(`main.ts`)이 포트 3000에서 기동. `AppModule`은 이후 태스크에서 다른 모듈을 import할 루트 모듈. `Client` — Vite dev server가 포트 5173에서 기동. `App` 컴포넌트는 이후 태스크에서 라우팅을 추가할 루트 컴포넌트. `docker-compose.yml` — `postgres` 서비스, 이후 모든 백엔드 태스크가 여기 접속.
+- Produces: `server` — NestJS 앱 진입점(`main.ts`)이 포트 3000에서 기동. `AppModule`은 이후 태스크에서 다른 모듈을 import할 루트 모듈. `client` — Vite dev server가 포트 5173에서 기동. `App` 컴포넌트는 이후 태스크에서 라우팅을 추가할 루트 컴포넌트. `docker-compose.yml` — `postgres` 서비스, 이후 모든 백엔드 태스크가 여기 접속.
 
 - [ ] **Step 1: 루트 workspace 설정 파일 작성**
 
@@ -78,15 +78,15 @@
 `pnpm-workspace.yaml`:
 ```yaml
 packages:
-  - "Server"
-  - "Client"
+  - "server"
+  - "client"
 ```
 
 `.gitignore`:
 ```
 node_modules
 dist
-Client/dist
+client/dist
 .env
 ```
 
@@ -111,7 +111,7 @@ volumes:
 
 - [ ] **Step 2: NestJS API 앱 스캐폴딩**
 
-`Server/package.json`:
+`server/package.json`:
 ```json
 {
   "name": "server",
@@ -166,7 +166,7 @@ volumes:
 }
 ```
 
-`Server/tsconfig.json`:
+`server/tsconfig.json`:
 ```json
 {
   "compilerOptions": {
@@ -190,7 +190,7 @@ volumes:
 }
 ```
 
-`Server/tsconfig.build.json`:
+`server/tsconfig.build.json`:
 ```json
 {
   "extends": "./tsconfig.json",
@@ -198,7 +198,7 @@ volumes:
 }
 ```
 
-`Server/nest-cli.json`:
+`server/nest-cli.json`:
 ```json
 {
   "$schema": "https://json.schemastore.org/nest-cli",
@@ -207,7 +207,7 @@ volumes:
 }
 ```
 
-`Server/src/app.module.ts`:
+`server/src/app.module.ts`:
 ```typescript
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -218,7 +218,7 @@ import { ConfigModule } from '@nestjs/config';
 export class AppModule {}
 ```
 
-`Server/src/main.ts`:
+`server/src/main.ts`:
 ```typescript
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
@@ -235,7 +235,7 @@ bootstrap();
 
 - [ ] **Step 3: React + Vite 웹 앱 스캐폴딩**
 
-`Client/package.json`:
+`client/package.json`:
 ```json
 {
   "name": "client",
@@ -265,7 +265,7 @@ bootstrap();
 }
 ```
 
-`Client/tsconfig.json`:
+`client/tsconfig.json`:
 ```json
 {
   "compilerOptions": {
@@ -287,7 +287,7 @@ bootstrap();
 }
 ```
 
-`Client/tsconfig.node.json`:
+`client/tsconfig.node.json`:
 ```json
 {
   "compilerOptions": {
@@ -300,7 +300,7 @@ bootstrap();
 }
 ```
 
-`Client/vite.config.ts`:
+`client/vite.config.ts`:
 ```typescript
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -314,7 +314,7 @@ export default defineConfig({
 });
 ```
 
-`Client/index.html`:
+`client/index.html`:
 ```html
 <!doctype html>
 <html lang="ko">
@@ -329,14 +329,14 @@ export default defineConfig({
 </html>
 ```
 
-`Client/src/App.tsx`:
+`client/src/App.tsx`:
 ```tsx
 export default function App() {
   return <div>음식점 예약 관리</div>;
 }
 ```
 
-`Client/src/main.tsx`:
+`client/src/main.tsx`:
 ```tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -366,7 +366,7 @@ Expected: `VITE ready` 로그와 함께 `http://localhost:5173/` 출력. 확인 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add package.json pnpm-workspace.yaml .gitignore docker-compose.yml Server Client
+git add package.json pnpm-workspace.yaml .gitignore docker-compose.yml server client
 git commit -m "chore: scaffold pnpm workspace with NestJS api, React web apps, and local PostgreSQL"
 ```
 
@@ -375,12 +375,12 @@ git commit -m "chore: scaffold pnpm workspace with NestJS api, React web apps, a
 ## Task 2: Prisma 스키마 (PostgreSQL) + PrismaService
 
 **Files:**
-- Create: `Server/prisma/schema.prisma`
-- Create: `Server/src/prisma/prisma.service.ts`
-- Create: `Server/src/prisma/prisma.module.ts`
-- Create: `Server/src/prisma/prisma.service.spec.ts`
-- Modify: `Server/src/app.module.ts`
-- Create: `Server/.env`
+- Create: `server/prisma/schema.prisma`
+- Create: `server/src/prisma/prisma.service.ts`
+- Create: `server/src/prisma/prisma.module.ts`
+- Create: `server/src/prisma/prisma.service.spec.ts`
+- Modify: `server/src/app.module.ts`
+- Create: `server/.env`
 - Modify: `.gitignore`
 
 **Interfaces:**
@@ -389,7 +389,7 @@ git commit -m "chore: scaffold pnpm workspace with NestJS api, React web apps, a
 
 - [ ] **Step 1: Prisma 스키마 작성**
 
-`Server/prisma/schema.prisma`:
+`server/prisma/schema.prisma`:
 ```prisma
 generator client {
   provider = "prisma-client-js"
@@ -486,7 +486,7 @@ model Reservation {
 
 - [ ] **Step 2: 환경 변수 파일 작성**
 
-`Server/.env`:
+`server/.env`:
 ```
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/restaurant_dev?schema=public"
 JWT_SECRET="dev-secret-change-in-production"
@@ -495,19 +495,19 @@ PORT=3000
 
 `.gitignore`에 다음 줄 추가:
 ```
-Server/prisma/dev.db
+server/prisma/dev.db
 ```
 (PostgreSQL 사용으로 실제로는 생성되지 않지만, 과거 SQLite 산출물이 실수로 커밋되는 것을 막기 위한 안전장치로 유지)
 
-- [ ] **Step 3: 마이그레이션 생성 및 Prisma Client 생성**
+- [ ] **Step 3: 마이그레이션 생성 및 Prisma client 생성**
 
 Run: `pnpm db:up` (이미 떠 있지 않다면)
 Run: `pnpm --filter server exec prisma migrate dev --name init`
-Expected: `Server/prisma/migrations/<timestamp>_init/migration.sql` 생성, "Your database is now in sync with your schema." 출력, Prisma Client 타입 생성 완료
+Expected: `server/prisma/migrations/<timestamp>_init/migration.sql` 생성, "Your database is now in sync with your schema." 출력, Prisma client 타입 생성 완료
 
 - [ ] **Step 4: PrismaService 작성**
 
-`Server/src/prisma/prisma.service.ts`:
+`server/src/prisma/prisma.service.ts`:
 ```typescript
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
@@ -524,7 +524,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 }
 ```
 
-`Server/src/prisma/prisma.module.ts`:
+`server/src/prisma/prisma.module.ts`:
 ```typescript
 import { Global, Module } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
@@ -539,7 +539,7 @@ export class PrismaModule {}
 
 - [ ] **Step 5: PrismaService 연결 테스트 작성**
 
-`Server/src/prisma/prisma.service.spec.ts`:
+`server/src/prisma/prisma.service.spec.ts`:
 ```typescript
 import { Test } from '@nestjs/testing';
 import { PrismaService } from './prisma.service';
@@ -573,7 +573,7 @@ Expected: PASS (1 passed)
 
 - [ ] **Step 7: AppModule에 PrismaModule 등록**
 
-`Server/src/app.module.ts`:
+`server/src/app.module.ts`:
 ```typescript
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -588,7 +588,7 @@ export class AppModule {}
 - [ ] **Step 8: Commit**
 
 ```bash
-git add Server/prisma Server/src/prisma Server/src/app.module.ts Server/.env .gitignore
+git add server/prisma server/src/prisma server/src/app.module.ts server/.env .gitignore
 git commit -m "feat: add Prisma schema (PostgreSQL) and PrismaService"
 ```
 
@@ -597,17 +597,17 @@ git commit -m "feat: add Prisma schema (PostgreSQL) and PrismaService"
 ## Task 3: Auth — 회원가입/로그인/JWT/비밀번호 변경
 
 **Files:**
-- Create: `Server/src/auth/dto/signup.dto.ts`
-- Create: `Server/src/auth/dto/login.dto.ts`
-- Create: `Server/src/auth/dto/change-password.dto.ts`
-- Create: `Server/src/auth/auth.service.ts`
-- Create: `Server/src/auth/auth.service.spec.ts`
-- Create: `Server/src/auth/auth.controller.ts`
-- Create: `Server/src/auth/jwt.strategy.ts`
-- Create: `Server/src/auth/jwt-auth.guard.ts`
-- Create: `Server/src/auth/current-user.decorator.ts`
-- Create: `Server/src/auth/auth.module.ts`
-- Modify: `Server/src/app.module.ts`
+- Create: `server/src/auth/dto/signup.dto.ts`
+- Create: `server/src/auth/dto/login.dto.ts`
+- Create: `server/src/auth/dto/change-password.dto.ts`
+- Create: `server/src/auth/auth.service.ts`
+- Create: `server/src/auth/auth.service.spec.ts`
+- Create: `server/src/auth/auth.controller.ts`
+- Create: `server/src/auth/jwt.strategy.ts`
+- Create: `server/src/auth/jwt-auth.guard.ts`
+- Create: `server/src/auth/current-user.decorator.ts`
+- Create: `server/src/auth/auth.module.ts`
+- Modify: `server/src/app.module.ts`
 
 **Interfaces:**
 - Consumes: `PrismaService` (Task 2)
@@ -615,7 +615,7 @@ git commit -m "feat: add Prisma schema (PostgreSQL) and PrismaService"
 
 - [ ] **Step 1: DTO 작성**
 
-`Server/src/auth/dto/signup.dto.ts`:
+`server/src/auth/dto/signup.dto.ts`:
 ```typescript
 import { IsEmail, IsString, MinLength } from 'class-validator';
 
@@ -633,7 +633,7 @@ export class SignupDto {
 }
 ```
 
-`Server/src/auth/dto/login.dto.ts`:
+`server/src/auth/dto/login.dto.ts`:
 ```typescript
 import { IsEmail, IsString } from 'class-validator';
 
@@ -646,7 +646,7 @@ export class LoginDto {
 }
 ```
 
-`Server/src/auth/dto/change-password.dto.ts`:
+`server/src/auth/dto/change-password.dto.ts`:
 ```typescript
 import { IsString, MinLength } from 'class-validator';
 
@@ -662,7 +662,7 @@ export class ChangePasswordDto {
 
 - [ ] **Step 2: AuthService 실패 테스트 작성**
 
-`Server/src/auth/auth.service.spec.ts`:
+`server/src/auth/auth.service.spec.ts`:
 ```typescript
 import { Test } from '@nestjs/testing';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
@@ -735,7 +735,7 @@ Expected: FAIL ("Cannot find module './auth.service'")
 
 - [ ] **Step 4: AuthService 구현**
 
-`Server/src/auth/auth.service.ts`:
+`server/src/auth/auth.service.ts`:
 ```typescript
 import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -796,7 +796,7 @@ Expected: PASS (5 passed)
 
 - [ ] **Step 6: JWT 전략, 가드, 데코레이터 작성**
 
-`Server/src/auth/jwt.strategy.ts`:
+`server/src/auth/jwt.strategy.ts`:
 ```typescript
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
@@ -824,7 +824,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 }
 ```
 
-`Server/src/auth/jwt-auth.guard.ts`:
+`server/src/auth/jwt-auth.guard.ts`:
 ```typescript
 import { Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -833,7 +833,7 @@ import { AuthGuard } from '@nestjs/passport';
 export class JwtAuthGuard extends AuthGuard('jwt') {}
 ```
 
-`Server/src/auth/current-user.decorator.ts`:
+`server/src/auth/current-user.decorator.ts`:
 ```typescript
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
@@ -850,7 +850,7 @@ export const CurrentUser = createParamDecorator((_: unknown, ctx: ExecutionConte
 
 - [ ] **Step 7: AuthController 및 AuthModule 작성**
 
-`Server/src/auth/auth.controller.ts`:
+`server/src/auth/auth.controller.ts`:
 ```typescript
 import { Body, Controller, Patch, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -882,7 +882,7 @@ export class AuthController {
 }
 ```
 
-`Server/src/auth/auth.module.ts`:
+`server/src/auth/auth.module.ts`:
 ```typescript
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
@@ -913,7 +913,7 @@ export class AuthModule {}
 
 - [ ] **Step 8: AppModule에 AuthModule 등록**
 
-`Server/src/app.module.ts`:
+`server/src/app.module.ts`:
 ```typescript
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -934,7 +934,7 @@ Expected: PASS (모든 스펙 통과)
 - [ ] **Step 10: Commit**
 
 ```bash
-git add Server/src/auth Server/src/app.module.ts
+git add server/src/auth server/src/app.module.ts
 git commit -m "feat: add signup/login/change-password auth flow with JWT"
 ```
 
@@ -943,15 +943,15 @@ git commit -m "feat: add signup/login/change-password auth flow with JWT"
 ## Task 4: Restaurants — 음식점 생성(위치/전화번호/주차여부 포함) + 멤버십 가드
 
 **Files:**
-- Create: `Server/src/restaurants/dto/create-restaurant.dto.ts`
-- Create: `Server/src/restaurants/roles.decorator.ts`
-- Create: `Server/src/restaurants/restaurant-member.guard.ts`
-- Create: `Server/src/restaurants/restaurant-member.guard.spec.ts`
-- Create: `Server/src/restaurants/restaurants.service.ts`
-- Create: `Server/src/restaurants/restaurants.service.spec.ts`
-- Create: `Server/src/restaurants/restaurants.controller.ts`
-- Create: `Server/src/restaurants/restaurants.module.ts`
-- Modify: `Server/src/app.module.ts`
+- Create: `server/src/restaurants/dto/create-restaurant.dto.ts`
+- Create: `server/src/restaurants/roles.decorator.ts`
+- Create: `server/src/restaurants/restaurant-member.guard.ts`
+- Create: `server/src/restaurants/restaurant-member.guard.spec.ts`
+- Create: `server/src/restaurants/restaurants.service.ts`
+- Create: `server/src/restaurants/restaurants.service.spec.ts`
+- Create: `server/src/restaurants/restaurants.controller.ts`
+- Create: `server/src/restaurants/restaurants.module.ts`
+- Modify: `server/src/app.module.ts`
 
 **Interfaces:**
 - Consumes: `PrismaService`(Task 2), `JwtAuthGuard`/`CurrentUser`(Task 3)
@@ -959,7 +959,7 @@ git commit -m "feat: add signup/login/change-password auth flow with JWT"
 
 - [ ] **Step 1: DTO 및 Roles 데코레이터 작성**
 
-`Server/src/restaurants/dto/create-restaurant.dto.ts`:
+`server/src/restaurants/dto/create-restaurant.dto.ts`:
 ```typescript
 import { IsBoolean, IsInt, IsString, Min, MinLength } from 'class-validator';
 
@@ -989,7 +989,7 @@ export class CreateRestaurantDto {
 }
 ```
 
-`Server/src/restaurants/roles.decorator.ts`:
+`server/src/restaurants/roles.decorator.ts`:
 ```typescript
 import { SetMetadata } from '@nestjs/common';
 
@@ -1001,7 +1001,7 @@ export const Roles = (...roles: MemberRole[]) => SetMetadata(ROLES_KEY, roles);
 
 - [ ] **Step 2: RestaurantMemberGuard 실패 테스트 작성**
 
-`Server/src/restaurants/restaurant-member.guard.spec.ts`:
+`server/src/restaurants/restaurant-member.guard.spec.ts`:
 ```typescript
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -1079,7 +1079,7 @@ Expected: FAIL ("Cannot find module './restaurant-member.guard'")
 
 - [ ] **Step 4: RestaurantMemberGuard 구현**
 
-`Server/src/restaurants/restaurant-member.guard.ts`:
+`server/src/restaurants/restaurant-member.guard.ts`:
 ```typescript
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -1126,7 +1126,7 @@ Expected: PASS (2 passed)
 
 - [ ] **Step 6: RestaurantsService 실패 테스트 작성**
 
-`Server/src/restaurants/restaurants.service.spec.ts`:
+`server/src/restaurants/restaurants.service.spec.ts`:
 ```typescript
 import { Test } from '@nestjs/testing';
 import { RestaurantsService } from './restaurants.service';
@@ -1193,7 +1193,7 @@ Expected: FAIL ("Cannot find module './restaurants.service'")
 
 - [ ] **Step 8: RestaurantsService 구현 (create, findMine)**
 
-`Server/src/restaurants/restaurants.service.ts`:
+`server/src/restaurants/restaurants.service.ts`:
 ```typescript
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
@@ -1240,7 +1240,7 @@ Expected: PASS (2 passed)
 
 - [ ] **Step 10: RestaurantsController 및 RestaurantsModule 작성**
 
-`Server/src/restaurants/restaurants.controller.ts`:
+`server/src/restaurants/restaurants.controller.ts`:
 ```typescript
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -1266,7 +1266,7 @@ export class RestaurantsController {
 }
 ```
 
-`Server/src/restaurants/restaurants.module.ts`:
+`server/src/restaurants/restaurants.module.ts`:
 ```typescript
 import { Module } from '@nestjs/common';
 import { RestaurantsService } from './restaurants.service';
@@ -1283,7 +1283,7 @@ export class RestaurantsModule {}
 
 - [ ] **Step 11: AppModule에 RestaurantsModule 등록**
 
-`Server/src/app.module.ts`:
+`server/src/app.module.ts`:
 ```typescript
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -1305,7 +1305,7 @@ Expected: PASS (모든 스펙 통과)
 - [ ] **Step 13: Commit**
 
 ```bash
-git add Server/src/restaurants Server/src/app.module.ts
+git add server/src/restaurants server/src/app.module.ts
 git commit -m "feat: add restaurant creation with address/phone/parking and membership guard"
 ```
 
@@ -1314,11 +1314,11 @@ git commit -m "feat: add restaurant creation with address/phone/parking and memb
 ## Task 5: Restaurants — 영업시간 CRUD + 직원 초대 + 공개 정보/검색 조회
 
 **Files:**
-- Create: `Server/src/restaurants/dto/set-business-hours.dto.ts`
-- Create: `Server/src/restaurants/dto/invite-staff.dto.ts`
-- Modify: `Server/src/restaurants/restaurants.service.ts`
-- Modify: `Server/src/restaurants/restaurants.service.spec.ts`
-- Modify: `Server/src/restaurants/restaurants.controller.ts`
+- Create: `server/src/restaurants/dto/set-business-hours.dto.ts`
+- Create: `server/src/restaurants/dto/invite-staff.dto.ts`
+- Modify: `server/src/restaurants/restaurants.service.ts`
+- Modify: `server/src/restaurants/restaurants.service.spec.ts`
+- Modify: `server/src/restaurants/restaurants.controller.ts`
 
 **Interfaces:**
 - Consumes: `RestaurantsService`, `RestaurantMemberGuard`, `Roles`(Task 4)
@@ -1326,7 +1326,7 @@ git commit -m "feat: add restaurant creation with address/phone/parking and memb
 
 - [ ] **Step 1: DTO 작성**
 
-`Server/src/restaurants/dto/set-business-hours.dto.ts`:
+`server/src/restaurants/dto/set-business-hours.dto.ts`:
 ```typescript
 import { Type } from 'class-transformer';
 import { ArrayMinSize, IsArray, IsInt, IsString, Matches, Max, Min, ValidateNested } from 'class-validator';
@@ -1355,7 +1355,7 @@ export class SetBusinessHoursDto {
 }
 ```
 
-`Server/src/restaurants/dto/invite-staff.dto.ts`:
+`server/src/restaurants/dto/invite-staff.dto.ts`:
 ```typescript
 import { IsEmail, IsString, MinLength } from 'class-validator';
 
@@ -1470,7 +1470,7 @@ Expected: FAIL (`service.setBusinessHours is not a function` 등)
 
 - [ ] **Step 4: RestaurantsService에 메서드 추가**
 
-`Server/src/restaurants/restaurants.service.ts` 상단 import를 다음으로 교체:
+`server/src/restaurants/restaurants.service.ts` 상단 import를 다음으로 교체:
 ```typescript
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
@@ -1549,7 +1549,7 @@ Expected: PASS (8 passed)
 
 - [ ] **Step 6: 컨트롤러에 엔드포인트 추가**
 
-`Server/src/restaurants/restaurants.controller.ts` 전체를 다음으로 교체:
+`server/src/restaurants/restaurants.controller.ts` 전체를 다음으로 교체:
 
 ```typescript
 import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
@@ -1614,7 +1614,7 @@ Expected: PASS (모든 스펙 통과)
 - [ ] **Step 8: Commit**
 
 ```bash
-git add Server/src/restaurants
+git add server/src/restaurants
 git commit -m "feat: add business hours, staff invite, public info, and search endpoints"
 ```
 
@@ -1623,8 +1623,8 @@ git commit -m "feat: add business hours, staff invite, public info, and search e
 ## Task 6: Reservations — 가용시간(슬롯) 계산 유틸
 
 **Files:**
-- Create: `Server/src/reservations/slot.util.ts`
-- Create: `Server/src/reservations/slot.util.spec.ts`
+- Create: `server/src/reservations/slot.util.ts`
+- Create: `server/src/reservations/slot.util.spec.ts`
 
 **Interfaces:**
 - Consumes: 없음 (순수 함수)
@@ -1632,7 +1632,7 @@ git commit -m "feat: add business hours, staff invite, public info, and search e
 
 - [ ] **Step 1: 실패 테스트 작성**
 
-`Server/src/reservations/slot.util.spec.ts`:
+`server/src/reservations/slot.util.spec.ts`:
 ```typescript
 import { generateSlots } from './slot.util';
 
@@ -1663,7 +1663,7 @@ Expected: FAIL ("Cannot find module './slot.util'")
 
 - [ ] **Step 3: 구현**
 
-`Server/src/reservations/slot.util.ts`:
+`server/src/reservations/slot.util.ts`:
 ```typescript
 function toMinutes(time: string): number {
   const [h, m] = time.split(':').map(Number);
@@ -1697,7 +1697,7 @@ Expected: PASS (4 passed)
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Server/src/reservations/slot.util.ts Server/src/reservations/slot.util.spec.ts
+git add server/src/reservations/slot.util.ts server/src/reservations/slot.util.spec.ts
 git commit -m "feat: add slot generation utility for reservation availability"
 ```
 
@@ -1706,14 +1706,14 @@ git commit -m "feat: add slot generation utility for reservation availability"
 ## Task 7: Reservations — 예약 생성/조회/취소/상태 변경 (고객 + 직원)
 
 **Files:**
-- Create: `Server/src/reservations/dto/create-reservation.dto.ts`
-- Create: `Server/src/reservations/dto/lookup-reservation.dto.ts`
-- Create: `Server/src/reservations/dto/update-reservation-status.dto.ts`
-- Create: `Server/src/reservations/reservations.service.ts`
-- Create: `Server/src/reservations/reservations.service.spec.ts`
-- Create: `Server/src/reservations/reservations.controller.ts`
-- Create: `Server/src/reservations/reservations.module.ts`
-- Modify: `Server/src/app.module.ts`
+- Create: `server/src/reservations/dto/create-reservation.dto.ts`
+- Create: `server/src/reservations/dto/lookup-reservation.dto.ts`
+- Create: `server/src/reservations/dto/update-reservation-status.dto.ts`
+- Create: `server/src/reservations/reservations.service.ts`
+- Create: `server/src/reservations/reservations.service.spec.ts`
+- Create: `server/src/reservations/reservations.controller.ts`
+- Create: `server/src/reservations/reservations.module.ts`
+- Modify: `server/src/app.module.ts`
 
 **Interfaces:**
 - Consumes: `PrismaService`(Task 2), `generateSlots`(Task 6), `RestaurantsService.getPublic`(Task 5), `JwtAuthGuard`/`CurrentUser`(Task 3), `RestaurantMemberGuard`/`Roles`(Task 4)
@@ -1721,7 +1721,7 @@ git commit -m "feat: add slot generation utility for reservation availability"
 
 - [ ] **Step 1: DTO 작성**
 
-`Server/src/reservations/dto/create-reservation.dto.ts`:
+`server/src/reservations/dto/create-reservation.dto.ts`:
 ```typescript
 import { IsInt, IsString, Matches, Min, MinLength } from 'class-validator';
 
@@ -1748,7 +1748,7 @@ export class CreateReservationDto {
 }
 ```
 
-`Server/src/reservations/dto/lookup-reservation.dto.ts`:
+`server/src/reservations/dto/lookup-reservation.dto.ts`:
 ```typescript
 import { IsString, MinLength } from 'class-validator';
 
@@ -1763,7 +1763,7 @@ export class LookupReservationDto {
 }
 ```
 
-`Server/src/reservations/dto/update-reservation-status.dto.ts`:
+`server/src/reservations/dto/update-reservation-status.dto.ts`:
 ```typescript
 import { IsIn } from 'class-validator';
 
@@ -1777,7 +1777,7 @@ export class UpdateReservationStatusDto {
 
 - [ ] **Step 2: ReservationsService 실패 테스트 작성**
 
-`Server/src/reservations/reservations.service.spec.ts`:
+`server/src/reservations/reservations.service.spec.ts`:
 ```typescript
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -1951,7 +1951,7 @@ Expected: FAIL ("Cannot find module './reservations.service'")
 
 - [ ] **Step 4: ReservationsService 구현**
 
-`Server/src/reservations/reservations.service.ts`:
+`server/src/reservations/reservations.service.ts`:
 ```typescript
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
@@ -2061,7 +2061,7 @@ Expected: PASS (9 passed)
 
 - [ ] **Step 6: ReservationsController 및 ReservationsModule 작성**
 
-`Server/src/reservations/reservations.controller.ts`:
+`server/src/reservations/reservations.controller.ts`:
 ```typescript
 import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -2120,7 +2120,7 @@ export class ReservationsController {
 }
 ```
 
-`Server/src/reservations/reservations.module.ts`:
+`server/src/reservations/reservations.module.ts`:
 ```typescript
 import { Module } from '@nestjs/common';
 import { RestaurantsModule } from '../restaurants/restaurants.module';
@@ -2138,7 +2138,7 @@ export class ReservationsModule {}
 
 - [ ] **Step 7: AppModule에 ReservationsModule 등록**
 
-`Server/src/app.module.ts`:
+`server/src/app.module.ts`:
 ```typescript
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -2161,7 +2161,7 @@ Expected: PASS (모든 스펙 통과)
 - [ ] **Step 9: Commit**
 
 ```bash
-git add Server/src/reservations Server/src/app.module.ts
+git add server/src/reservations server/src/app.module.ts
 git commit -m "feat: add reservation availability, booking, lookup/cancel, and staff management endpoints"
 ```
 
@@ -2170,13 +2170,13 @@ git commit -m "feat: add reservation availability, booking, lookup/cancel, and s
 ## Task 8: Frontend — API 클라이언트 + 라우팅 셸 + 인증 페이지
 
 **Files:**
-- Create: `Client/src/api/client.ts`
-- Create: `Client/src/auth/AuthContext.tsx`
-- Create: `Client/src/auth/SignupPage.tsx`
-- Create: `Client/src/auth/LoginPage.tsx`
-- Create: `Client/src/auth/LoginPage.test.tsx`
-- Modify: `Client/src/App.tsx`
-- Create: `Client/.env`
+- Create: `client/src/api/client.ts`
+- Create: `client/src/auth/AuthContext.tsx`
+- Create: `client/src/auth/SignupPage.tsx`
+- Create: `client/src/auth/LoginPage.tsx`
+- Create: `client/src/auth/LoginPage.test.tsx`
+- Modify: `client/src/App.tsx`
+- Create: `client/.env`
 
 **Interfaces:**
 - Consumes: 없음 (Task 1의 스캐폴딩)
@@ -2184,12 +2184,12 @@ git commit -m "feat: add reservation availability, booking, lookup/cancel, and s
 
 - [ ] **Step 1: 환경변수 및 API 클라이언트 작성**
 
-`Client/.env`:
+`client/.env`:
 ```
 VITE_API_BASE_URL=http://localhost:3000
 ```
 
-`Client/src/api/client.ts`:
+`client/src/api/client.ts`:
 ```typescript
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
 
@@ -2226,7 +2226,7 @@ export const apiClient = {
 
 - [ ] **Step 2: AuthContext 작성**
 
-`Client/src/auth/AuthContext.tsx`:
+`client/src/auth/AuthContext.tsx`:
 ```tsx
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
 
@@ -2270,7 +2270,7 @@ export function useAuth(): AuthContextValue {
 
 - [ ] **Step 3: 실패 테스트 작성 (LoginPage)**
 
-`Client/src/auth/LoginPage.test.tsx`:
+`client/src/auth/LoginPage.test.tsx`:
 ```tsx
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -2322,7 +2322,7 @@ Expected: FAIL ("Cannot find module './LoginPage'")
 
 - [ ] **Step 5: SignupPage, LoginPage 구현**
 
-`Client/src/auth/SignupPage.tsx`:
+`client/src/auth/SignupPage.tsx`:
 ```tsx
 import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -2362,7 +2362,7 @@ export function SignupPage() {
 }
 ```
 
-`Client/src/auth/LoginPage.tsx`:
+`client/src/auth/LoginPage.tsx`:
 ```tsx
 import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -2411,7 +2411,7 @@ Expected: PASS (1 passed)
 
 - [ ] **Step 7: App.tsx에 라우팅 추가**
 
-`Client/src/App.tsx`:
+`client/src/App.tsx`:
 ```tsx
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
@@ -2436,7 +2436,7 @@ export default function App() {
 - [ ] **Step 8: Commit**
 
 ```bash
-git add Client/src/api Client/src/auth Client/src/App.tsx Client/.env
+git add client/src/api client/src/auth client/src/App.tsx client/.env
 git commit -m "feat: add API client, auth context, and signup/login pages"
 ```
 
@@ -2445,10 +2445,10 @@ git commit -m "feat: add API client, auth context, and signup/login pages"
 ## Task 9: Frontend — 대시보드: 음식점 설정(위치/전화번호/주차/영업시간) + 직원 초대
 
 **Files:**
-- Create: `Client/src/dashboard/DashboardLayout.tsx`
-- Create: `Client/src/dashboard/RestaurantSettingsPage.tsx`
-- Create: `Client/src/dashboard/RestaurantSettingsPage.test.tsx`
-- Modify: `Client/src/App.tsx`
+- Create: `client/src/dashboard/DashboardLayout.tsx`
+- Create: `client/src/dashboard/RestaurantSettingsPage.tsx`
+- Create: `client/src/dashboard/RestaurantSettingsPage.test.tsx`
+- Modify: `client/src/App.tsx`
 
 **Interfaces:**
 - Consumes: `apiClient`(Task 8), `useAuth`(Task 8)
@@ -2456,7 +2456,7 @@ git commit -m "feat: add API client, auth context, and signup/login pages"
 
 - [ ] **Step 1: 실패 테스트 작성**
 
-`Client/src/dashboard/RestaurantSettingsPage.test.tsx`:
+`client/src/dashboard/RestaurantSettingsPage.test.tsx`:
 ```tsx
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -2519,7 +2519,7 @@ Expected: FAIL ("Cannot find module './RestaurantSettingsPage'")
 
 - [ ] **Step 3: RestaurantSettingsPage 구현**
 
-`Client/src/dashboard/RestaurantSettingsPage.tsx`:
+`client/src/dashboard/RestaurantSettingsPage.tsx`:
 ```tsx
 import { FormEvent, useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
@@ -2626,7 +2626,7 @@ Expected: PASS (2 passed)
 
 - [ ] **Step 5: DashboardLayout 및 라우팅 추가**
 
-`Client/src/dashboard/DashboardLayout.tsx`:
+`client/src/dashboard/DashboardLayout.tsx`:
 ```tsx
 import { NavLink, Outlet } from 'react-router-dom';
 
@@ -2643,7 +2643,7 @@ export function DashboardLayout() {
 }
 ```
 
-`Client/src/App.tsx`:
+`client/src/App.tsx`:
 ```tsx
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
@@ -2674,7 +2674,7 @@ export default function App() {
 - [ ] **Step 6: Commit**
 
 ```bash
-git add Client/src/dashboard Client/src/App.tsx
+git add client/src/dashboard client/src/App.tsx
 git commit -m "feat: add dashboard layout and restaurant settings page"
 ```
 
@@ -2683,9 +2683,9 @@ git commit -m "feat: add dashboard layout and restaurant settings page"
 ## Task 10: Frontend — 대시보드: 예약 목록 + 수동 등록 + 상태 변경
 
 **Files:**
-- Create: `Client/src/dashboard/ReservationsPage.tsx`
-- Create: `Client/src/dashboard/ReservationsPage.test.tsx`
-- Modify: `Client/src/App.tsx`
+- Create: `client/src/dashboard/ReservationsPage.tsx`
+- Create: `client/src/dashboard/ReservationsPage.test.tsx`
+- Modify: `client/src/App.tsx`
 
 **Interfaces:**
 - Consumes: `apiClient`(Task 8), `DashboardLayout`(Task 9). 이 태스크는 사장님이 등록한 음식점 id를 `localStorage` 또는 `/restaurants/mine`로 조회한다고 가정한다(간단화를 위해 첫 번째 음식점만 사용).
@@ -2693,7 +2693,7 @@ git commit -m "feat: add dashboard layout and restaurant settings page"
 
 - [ ] **Step 1: 실패 테스트 작성**
 
-`Client/src/dashboard/ReservationsPage.test.tsx`:
+`client/src/dashboard/ReservationsPage.test.tsx`:
 ```tsx
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -2759,7 +2759,7 @@ Expected: FAIL ("Cannot find module './ReservationsPage'")
 
 - [ ] **Step 3: ReservationsPage 구현**
 
-`Client/src/dashboard/ReservationsPage.tsx`:
+`client/src/dashboard/ReservationsPage.tsx`:
 ```tsx
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
@@ -2841,7 +2841,7 @@ Expected: PASS (2 passed)
 
 - [ ] **Step 5: 라우팅 추가**
 
-`Client/src/App.tsx`의 `Route path="/dashboard"` 블록 안에 추가:
+`client/src/App.tsx`의 `Route path="/dashboard"` 블록 안에 추가:
 ```tsx
             <Route path="reservations" element={<ReservationsPage />} />
 ```
@@ -2853,7 +2853,7 @@ import { ReservationsPage } from './dashboard/ReservationsPage';
 - [ ] **Step 6: Commit**
 
 ```bash
-git add Client/src/dashboard/ReservationsPage.tsx Client/src/dashboard/ReservationsPage.test.tsx Client/src/App.tsx
+git add client/src/dashboard/ReservationsPage.tsx client/src/dashboard/ReservationsPage.test.tsx client/src/App.tsx
 git commit -m "feat: add dashboard reservations list with status updates"
 ```
 
@@ -2862,11 +2862,11 @@ git commit -m "feat: add dashboard reservations list with status updates"
 ## Task 11: Frontend — 고객용 검색 + 음식점 상세/예약 페이지
 
 **Files:**
-- Create: `Client/src/customer/SearchPage.tsx`
-- Create: `Client/src/customer/SearchPage.test.tsx`
-- Create: `Client/src/customer/RestaurantBookingPage.tsx`
-- Create: `Client/src/customer/RestaurantBookingPage.test.tsx`
-- Modify: `Client/src/App.tsx`
+- Create: `client/src/customer/SearchPage.tsx`
+- Create: `client/src/customer/SearchPage.test.tsx`
+- Create: `client/src/customer/RestaurantBookingPage.tsx`
+- Create: `client/src/customer/RestaurantBookingPage.test.tsx`
+- Modify: `client/src/App.tsx`
 
 **Interfaces:**
 - Consumes: `apiClient`(Task 8)
@@ -2874,7 +2874,7 @@ git commit -m "feat: add dashboard reservations list with status updates"
 
 - [ ] **Step 1: SearchPage 실패 테스트 작성**
 
-`Client/src/customer/SearchPage.test.tsx`:
+`client/src/customer/SearchPage.test.tsx`:
 ```tsx
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -2920,7 +2920,7 @@ Expected: FAIL ("Cannot find module './SearchPage'")
 
 - [ ] **Step 3: SearchPage 구현**
 
-`Client/src/customer/SearchPage.tsx`:
+`client/src/customer/SearchPage.tsx`:
 ```tsx
 import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -2975,7 +2975,7 @@ Expected: PASS (1 passed)
 
 - [ ] **Step 5: RestaurantBookingPage 실패 테스트 작성**
 
-`Client/src/customer/RestaurantBookingPage.test.tsx`:
+`client/src/customer/RestaurantBookingPage.test.tsx`:
 ```tsx
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -3051,7 +3051,7 @@ Expected: FAIL ("Cannot find module './RestaurantBookingPage'")
 
 - [ ] **Step 7: RestaurantBookingPage 구현**
 
-`Client/src/customer/RestaurantBookingPage.tsx`:
+`client/src/customer/RestaurantBookingPage.tsx`:
 ```tsx
 import { FormEvent, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -3183,7 +3183,7 @@ Expected: PASS (2 passed)
 
 - [ ] **Step 9: 라우팅 추가**
 
-`Client/src/App.tsx`에 다음 import 및 Route 추가:
+`client/src/App.tsx`에 다음 import 및 Route 추가:
 ```tsx
 import { SearchPage } from './customer/SearchPage';
 import { RestaurantBookingPage } from './customer/RestaurantBookingPage';
@@ -3196,7 +3196,7 @@ import { RestaurantBookingPage } from './customer/RestaurantBookingPage';
 - [ ] **Step 10: Commit**
 
 ```bash
-git add Client/src/customer Client/src/App.tsx
+git add client/src/customer client/src/App.tsx
 git commit -m "feat: add customer search and restaurant booking pages"
 ```
 
@@ -3205,9 +3205,9 @@ git commit -m "feat: add customer search and restaurant booking pages"
 ## Task 12: Frontend — 고객용 예약 조회/취소 페이지
 
 **Files:**
-- Create: `Client/src/customer/LookupPage.tsx`
-- Create: `Client/src/customer/LookupPage.test.tsx`
-- Modify: `Client/src/App.tsx`
+- Create: `client/src/customer/LookupPage.tsx`
+- Create: `client/src/customer/LookupPage.test.tsx`
+- Modify: `client/src/App.tsx`
 
 **Interfaces:**
 - Consumes: `apiClient`(Task 8)
@@ -3215,7 +3215,7 @@ git commit -m "feat: add customer search and restaurant booking pages"
 
 - [ ] **Step 1: 실패 테스트 작성**
 
-`Client/src/customer/LookupPage.test.tsx`:
+`client/src/customer/LookupPage.test.tsx`:
 ```tsx
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -3290,7 +3290,7 @@ Expected: FAIL ("Cannot find module './LookupPage'")
 
 - [ ] **Step 3: LookupPage 구현**
 
-`Client/src/customer/LookupPage.tsx`:
+`client/src/customer/LookupPage.tsx`:
 ```tsx
 import { FormEvent, useState } from 'react';
 import { apiClient } from '../api/client';
@@ -3367,7 +3367,7 @@ Expected: PASS (2 passed)
 
 - [ ] **Step 5: 라우팅 추가**
 
-`Client/src/App.tsx`에 다음 import 및 Route 추가:
+`client/src/App.tsx`에 다음 import 및 Route 추가:
 ```tsx
 import { LookupPage } from './customer/LookupPage';
 ```
@@ -3378,7 +3378,7 @@ import { LookupPage } from './customer/LookupPage';
 - [ ] **Step 6: Commit**
 
 ```bash
-git add Client/src/customer/LookupPage.tsx Client/src/customer/LookupPage.test.tsx Client/src/App.tsx
+git add client/src/customer/LookupPage.tsx client/src/customer/LookupPage.test.tsx client/src/App.tsx
 git commit -m "feat: add customer reservation lookup and cancel page"
 ```
 
